@@ -684,6 +684,7 @@ class GitlabManager:
            TODO: подтягивать пути для группы и регистри из апи гитлаба
                  более изящно подкидывать их в мр после сбора
         """
+        return [] # пока не используем файлы для переопределения стандартных
         from bazis_gitlab.deploy_config import (
             NginxConfig,
             DeployScriptConfig,
