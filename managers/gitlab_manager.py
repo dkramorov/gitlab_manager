@@ -643,6 +643,9 @@ class GitlabManager:
             file_path = os.path.join(item['folder'], item['fname'])
             # в контейнере может быть settings.BASE_DIR=/app (а у нас /app/apps, тогда a.replace(settings.BASE_DIR, '') = s)
             gitlab_path = os.path.join(item['folder'].replace(settings.BASE_DIR, '', 1), item['fname']).lstrip('/')
+            # Если хотим изменить место назначения (например, файл лежит в одном месте, а грузим в другое)
+            if item.get('gitlab_path'):
+                gitlab_path = item['gitlab_path']
             action = 'update' if gitlab_path in project_path_files else 'create'
             action = {
                 'action': action,
@@ -657,9 +660,23 @@ class GitlabManager:
             else:
                 with open(file_path, mode='r', encoding='utf-8') as f:
                     action['content'] = f.read()
-                self.check_exclude_and_include_folders(exclude_folders_arr=exclude_folders_arr,
-                                                       include_folders_arr=include_folders_arr,
-                                                       action=action)
+                    if item.get('pretty'):
+                        try:
+                            action['content'] = json.dumps(
+                                json.loads(action['content']),
+                                sort_keys=False,
+                                indent=2,
+                                separators=(',', ': '),
+                                ensure_ascii=False,
+                                default=str,
+                            )
+                        except Exception as e:
+                            print(e)
+                self.check_exclude_and_include_folders(
+                    exclude_folders_arr=exclude_folders_arr,
+                    include_folders_arr=include_folders_arr,
+                    action=action,
+                )
             data['actions'].append(action)
         # Файлы для автодеплоя
         autodeploy_files = self.autodeploy_files(project_path_files=project_path_files)
